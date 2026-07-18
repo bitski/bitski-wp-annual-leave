@@ -3,7 +3,7 @@
 /**
  * Annual leave module.
  *
- * ACF-based annual leave rendering (accordion + callout).
+ * ACF-based annual leave rendering (accordion and callout).
  */
 
 /**
@@ -20,7 +20,7 @@ function praxis_eichholz_annual_leave_render_accordion(): string
     }
 
     ob_start(); ?>
-    <h4><strong>Unsere Jahresurlaube</strong></h4>
+    <h4><strong>Unsere Urlaubszeiten</strong></h4>
     <ul>
         <?php
         foreach ($annual_leave_accordion_data as $data) {
@@ -57,8 +57,9 @@ function praxis_eichholz_annual_leave_render_callout(): string
     $current_date = date('Y-m-d');
 
     foreach ($annual_leave_data as $data) {
-        if ($current_date >= $data['dates']['start']
-            && $current_date <= $data['dates']['end']
+        if (
+            $current_date >= $data['dates']['start'] &&
+            $current_date <= $data['dates']['end']
         ) {
             $current_annual_leave_data = $data;
             break;
@@ -80,8 +81,9 @@ function praxis_eichholz_annual_leave_render_callout(): string
             $current_annual_leave_data['dates']['end'],
         );
 
-        if ( ! ($start_object instanceof DateTime)
-            || ! ($end_object instanceof DateTime)
+        if (
+            ! ($start_object instanceof DateTime) ||
+            ! ($end_object instanceof DateTime)
         ) {
             ob_end_clean();
 
@@ -121,7 +123,7 @@ function praxis_eichholz_annual_leave_accordion_data(): array
 
     usort($annual_leave_accordion_data, static function ($a, $b) {
         return strtotime($a['dates']['start']) <=>
-                strtotime($b['dates']['start']);
+            strtotime($b['dates']['start']);
     });
 
     foreach ($annual_leave_accordion_data as $key => $data) {
