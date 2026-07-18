@@ -56,10 +56,5 @@ function praxis_eichholz_annual_leave_data(): array
         ];
     }
 
-    usort($annual_leave_data, static function ($a, $b) {
-        return strtotime($a['dates']['start']) <=>
-            strtotime($b['dates']['start']);
-    });
-
     return $annual_leave_data;
 }

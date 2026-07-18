@@ -119,6 +119,11 @@ function praxis_eichholz_annual_leave_accordion_data(): array
 {
     $annual_leave_accordion_data = praxis_eichholz_annual_leave_data();
 
+    usort($annual_leave_accordion_data, static function ($a, $b) {
+        return strtotime($a['dates']['start']) <=>
+                strtotime($b['dates']['start']);
+    });
+
     foreach ($annual_leave_accordion_data as $key => $data) {
         // Checks if the start and end dates are valid DateTimeImmutable objects.
         $start_object = DateTimeImmutable::createFromFormat(
