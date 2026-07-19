@@ -13,7 +13,8 @@
  */
 function praxis_eichholz_annual_leave_render_accordion(): string
 {
-    $annual_leave_accordion_data = praxis_eichholz_annual_leave_accordion_data();
+    $annual_leave_accordion_data = praxis_eichholz_annual_leave_accordion_data(
+    );
 
     if ($annual_leave_accordion_data === []) {
         return '';
@@ -53,8 +54,12 @@ function praxis_eichholz_annual_leave_render_callout(): string
     $current_annual_leave_data = praxis_eichholz_annual_leave_callout_data();
 
     ob_start();
-    $start_object = new DateTimeImmutable($current_annual_leave_data['dates']['start']);
-    $end_object   = new DateTimeImmutable($current_annual_leave_data['dates']['end']); ?>
+    $start_object = new DateTimeImmutable(
+            $current_annual_leave_data['dates']['start'],
+    );
+    $end_object   = new DateTimeImmutable(
+            $current_annual_leave_data['dates']['end'],
+    ); ?>
     <br>
     <p><strong>Die Praxis ist im Moment geschlossen, da wir gerade im Urlaub
             sind:</strong></p>
@@ -80,30 +85,35 @@ function praxis_eichholz_annual_leave_render_callout(): string
     return ob_get_clean();
 }
 
+
+/**
+ * Returns the view model for the annual leave accordion.
+ */
 function praxis_eichholz_annual_leave_accordion_data(): array
 {
-    $annual_leave_data = praxis_eichholz_annual_leave_data();
+    $annual_leave_data           = praxis_eichholz_annual_leave_data();
     $annual_leave_accordion_data = $annual_leave_data;
 
     usort($annual_leave_accordion_data, static function ($a, $b) {
-        return strtotime($a['dates']['start']) <=>
-            strtotime($b['dates']['start']);
+        return $a['dates']['start'] <=>
+                $b['dates']['start'];
     });
 
     foreach ($annual_leave_accordion_data as $key => $data) {
         // Removes entries with invalid date periods.
         $start_object = DateTimeImmutable::createFromFormat(
-            'Y-m-d',
-            $data['dates']['start'],
+                'Y-m-d',
+                $data['dates']['start'],
         );
         $end_object   = DateTimeImmutable::createFromFormat(
-            'Y-m-d',
-            $data['dates']['end'],
+                'Y-m-d',
+                $data['dates']['end'],
         );
 
         if (
-            ! ($start_object instanceof DateTimeImmutable) ||
-            ! ($end_object instanceof DateTimeImmutable)
+                ! ($start_object instanceof DateTimeImmutable)
+                ||
+                ! ($end_object instanceof DateTimeImmutable)
         ) {
             unset($annual_leave_accordion_data[$key]);
         }
@@ -113,46 +123,64 @@ function praxis_eichholz_annual_leave_accordion_data(): array
 }
 
 /**
- *
+ * Returns the view model for the annual leave callout.
  */
 function praxis_eichholz_annual_leave_callout_data(): array
 {
-    $annual_leave_data = praxis_eichholz_annual_leave_data();
+    $annual_leave_data         = praxis_eichholz_annual_leave_data();
     $annual_leave_callout_data = [];
 
-    $current_date = date('Y-m-d');
+    $current_date_object = new DateTimeImmutable('today');
 
     foreach ($annual_leave_data as $data) {
         // Skips entries with invalid date periods.
         $start_object = DateTimeImmutable::createFromFormat(
-            'Y-m-d',
-            $data['dates']['start'],
+                'Y-m-d',
+                $data['dates']['start'],
         );
         $end_object   = DateTimeImmutable::createFromFormat(
-            'Y-m-d',
-            $data['dates']['end'],
+                'Y-m-d',
+                $data['dates']['end'],
         );
 
         if (
-            ! ($start_object instanceof DateTimeImmutable) ||
-            ! ($end_object instanceof DateTimeImmutable)
+                ! ($start_object instanceof DateTimeImmutable)
+                ||
+                ! ($end_object instanceof DateTimeImmutable)
         ) {
             continue;
         }
 
         if (
-            $current_date >= $data['dates']['start'] &&
-            $current_date <= $data['dates']['end']
+                $current_date_object >= $start_object
+                && $current_date_object <= $end_object
         ) {
             $annual_leave_callout_data = $data;
             break;
         }
     }
 
-    if ($annual_leave_callout_data !== []) {
-        // TODO: Add substitute information.;
+    if (
+            $annual_leave_callout_data !== []
+            && ! empty($annual_leave_callout_data['substitutes'])
+    ) {
+        $substitute_data = praxis_eichholz_substitute_data();
+        foreach (
+                $annual_leave_callout_data['substitutes'] as $index =>
+                $substitute
+        ) {
+            $substitute_id = $substitute['substitute_id'];
+
+            if (!isset($substitute_data[$substitute_id])) {
+                continue;
+            }
+
+            $annual_leave_callout_data['substitutes'][$index] = array_merge(
+                    $substitute,
+                    $substitute_data[$substitute_id],
+            );
+        }
     }
 
     return $annual_leave_callout_data;
 }
-

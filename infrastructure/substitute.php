@@ -5,7 +5,7 @@
  */
 function praxis_eichholz_substitute_data(): array
 {
-    $praxis_eichholz_substitute_data = [];
+    $substitute_data = [];
     $post_type = 'substitute';
 
     $args = [
@@ -22,12 +22,12 @@ function praxis_eichholz_substitute_data(): array
         $address = get_field('address', $post_ID);
         $phone   = get_field('phone', $post_ID);
 
-        $praxis_eichholz_substitute_data[$post_ID] = [
+        $substitute_data[$post_ID] = [
             'title'   => $title,
             'address' => $address,
             'phone'   => $phone
         ];
     }
 
-    return $praxis_eichholz_substitute_data;
+    return $substitute_data;
 }
