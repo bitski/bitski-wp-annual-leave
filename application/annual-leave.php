@@ -6,6 +6,8 @@
  * ACF-based annual leave rendering (accordion and callout).
  */
 
+// Renderers
+
 /**
  * Renders annual leave information for the appropriate accordion item.
  *
@@ -13,10 +15,10 @@
  */
 function praxis_eichholz_annual_leave_render_accordion(): string
 {
-    $annual_leave_accordion_data = praxis_eichholz_annual_leave_accordion_data(
+    $annual_leave_accordion_view_model = praxis_eichholz_annual_leave_accordion_view_model(
     );
 
-    if ($annual_leave_accordion_data === []) {
+    if ($annual_leave_accordion_view_model === []) {
         return '';
     }
 
@@ -24,7 +26,7 @@ function praxis_eichholz_annual_leave_render_accordion(): string
     <h4><strong>Unsere Urlaubszeiten</strong></h4>
     <ul>
         <?php
-        foreach ($annual_leave_accordion_data as $data) {
+        foreach ($annual_leave_accordion_view_model as $data) {
             $start_object = new DateTimeImmutable($data['dates']['start']);
             $end_object   = new DateTimeImmutable($data['dates']['end']); ?>
             <li>
@@ -51,7 +53,7 @@ function praxis_eichholz_annual_leave_render_accordion(): string
  */
 function praxis_eichholz_annual_leave_render_callout(): string
 {
-    $current_annual_leave_data = praxis_eichholz_annual_leave_callout_data();
+    $current_annual_leave_data = praxis_eichholz_annual_leave_callout_view_model();
 
     ob_start();
     $start_object = new DateTimeImmutable(
@@ -85,21 +87,22 @@ function praxis_eichholz_annual_leave_render_callout(): string
     return ob_get_clean();
 }
 
+// View models
 
 /**
- * Returns the view model for the annual leave accordion.
+ * Creates the view model for the annual leave accordion.
  */
-function praxis_eichholz_annual_leave_accordion_data(): array
+function praxis_eichholz_annual_leave_accordion_view_model(): array
 {
     $annual_leave_data           = praxis_eichholz_annual_leave_data();
-    $annual_leave_accordion_data = $annual_leave_data;
+    $annual_leave_accordion_view_model = $annual_leave_data;
 
-    usort($annual_leave_accordion_data, static function ($a, $b) {
+    usort($annual_leave_accordion_view_model, static function ($a, $b) {
         return $a['dates']['start'] <=>
                 $b['dates']['start'];
     });
 
-    foreach ($annual_leave_accordion_data as $key => $data) {
+    foreach ($annual_leave_accordion_view_model as $key => $data) {
         // Removes entries with invalid date periods.
         $start_object = DateTimeImmutable::createFromFormat(
                 'Y-m-d',
@@ -115,20 +118,20 @@ function praxis_eichholz_annual_leave_accordion_data(): array
                 ||
                 ! ($end_object instanceof DateTimeImmutable)
         ) {
-            unset($annual_leave_accordion_data[$key]);
+            unset($annual_leave_accordion_view_model[$key]);
         }
     }
 
-    return $annual_leave_accordion_data;
+    return $annual_leave_accordion_view_model;
 }
 
 /**
- * Returns the view model for the annual leave callout.
+ * Creates the view model for the annual leave callout.
  */
-function praxis_eichholz_annual_leave_callout_data(): array
+function praxis_eichholz_annual_leave_callout_view_model(): array
 {
     $annual_leave_data         = praxis_eichholz_annual_leave_data();
-    $annual_leave_callout_data = [];
+    $annual_leave_callout_view_model = [];
 
     $current_date_object = new DateTimeImmutable('today');
 
@@ -155,18 +158,18 @@ function praxis_eichholz_annual_leave_callout_data(): array
                 $current_date_object >= $start_object
                 && $current_date_object <= $end_object
         ) {
-            $annual_leave_callout_data = $data;
+            $annual_leave_callout_view_model = $data;
             break;
         }
     }
 
     if (
-            $annual_leave_callout_data !== []
-            && ! empty($annual_leave_callout_data['substitutes'])
+            $annual_leave_callout_view_model !== []
+            && ! empty($annual_leave_callout_view_model['substitutes'])
     ) {
         $substitute_data = praxis_eichholz_substitute_data();
         foreach (
-                $annual_leave_callout_data['substitutes'] as $index =>
+                $annual_leave_callout_view_model['substitutes'] as $index =>
                 $substitute
         ) {
             $substitute_id = $substitute['substitute_id'];
@@ -175,12 +178,12 @@ function praxis_eichholz_annual_leave_callout_data(): array
                 continue;
             }
 
-            $annual_leave_callout_data['substitutes'][$index] = array_merge(
+            $annual_leave_callout_view_model['substitutes'][$index] = array_merge(
                     $substitute,
                     $substitute_data[$substitute_id],
             );
         }
     }
 
-    return $annual_leave_callout_data;
+    return $annual_leave_callout_view_model;
 }
